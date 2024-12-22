@@ -5,12 +5,13 @@ import bcrypt from 'bcrypt'
 import * as jwt from "../jwt"
 import { Patient, RefreshToken } from "../models";
 import { RefreshTokenRepository, PatientsRepository } from "../repositories";
-import { PatientAlreadyExistsError } from "../errors";
 import { refreshTokenExpiresIn } from "../refreshTokenExpiration";
+import { PatientAlreadyExistsError } from "../errors/patient.errors";
+import { HttpError } from "src/common/app.errors";
+import { GeneralInternalError } from "src/errors/unknown.errors";
 
 class PatientController{
   
-
   async create(request: Request, response: Response){
     const body = request.body;
     
@@ -23,7 +24,7 @@ class PatientController{
     })
 
     if(patientAlreadyExists){
-      throw new PatientAlreadyExistsError()
+      throw new PatientAlreadyExistsError();
     }
 
     body.status = "Saudável"
@@ -56,8 +57,22 @@ class PatientController{
         refreshToken 
       })
     } catch (error) {
-      return response.status(403).json({
-        error: "Erro na criação do paciente"
+      if (error instanceof HttpError) {
+        return response.status(error.httpCode).json({
+          apiContext: error.apiContext,
+          httpCode: error.httpCode,
+          message: error.message,
+          externalServiceError: error.externalServiceError
+        })
+      }
+
+      const unknownError = new GeneralInternalError();
+
+      return response.status(unknownError.httpCode).json({
+        apiContext: unknownError.apiContext,
+        httpCode: unknownError.httpCode,
+        message: unknownError.message,
+        externalServiceError: unknownError.externalServiceError
       })
     }
   }

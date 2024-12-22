@@ -14,7 +14,7 @@ Implementação da base de dados para o aplicativo MonipaEp e seu sistema web de
 ### Requisitos
 
 - `Docker`
-- `Yarm`
+- `Yarn`
 
 ### Passos
 
