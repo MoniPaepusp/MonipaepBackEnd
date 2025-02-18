@@ -1,0 +1,36 @@
+name: Deploy to USP Cloud
+on:
+  push:
+    branches:
+      - ci/deploy-on-usp-vm
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+
+      - name: Install OpenVPN
+        run: |
+          sudo apt update
+          sudo apt install -y openvpn openvpn-systemd-resolved
+
+      - name: Install Telnet
+        run: |
+          sudo apt update
+          sudo apt install telnet
+        
+      - name: Connecting to USP VPN
+        uses: "kota65535/github-openvpn-connect-action@v2"
+        with:
+          config_file: .github/workflows/client.ovpn
+          username: ${{ secrets.VPN_USERNAME }}
+          password: ${{ secrets.VPN_PASSWORD }}
+
+      - name: Telnet monipaep to see if its acessible
+        run: |
+          telnet monipaep.icmc.usp.br 22
